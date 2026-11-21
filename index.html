@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Voice-powered todo notes. Everything stays on your phone." />
+  <title>VoiceNotes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- SVG icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-mic" viewBox="0 0 24 24"><path fill="currentColor" d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a1 1 0 1 1 2 0 8 8 0 0 1-7 7.94V21h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-1.56a8 8 0 0 1-7-7.94 1 1 0 1 1 2 0 6 6 0 0 0 12 0Z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16ZM10 20a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm5-2 4 4"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path fill="currentColor" d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12 2-12 2z"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Zm0 3h16M8 3v4M16 3v4"/></symbol>
+  </svg>
+
+  <div class="app" id="app">
+    <!-- ============ SCREEN 1: NOTES LIST ============ -->
+    <section class="screen" id="screen-home" aria-label="All notes">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="greeting">Hello</p>
+          <h1 class="title">My Notes</h1>
+        </div>
+        <div class="stat-pill" id="home-stats" aria-live="polite">0 open</div>
+      </header>
+
+      <label class="search">
+        <svg class="icon"><use href="#i-search"/></svg>
+        <input id="search-input" type="search" placeholder="Search notes or items" autocomplete="off" />
+      </label>
+
+      <div class="voice-hero" id="voice-hero">
+        <button class="mic-btn mic-hero" id="mic-home" aria-label="Talk to assistant">
+          <span class="pulse"></span>
+          <svg class="icon"><use href="#i-mic"/></svg>
+        </button>
+        <div class="voice-hero-text">
+          <strong>Tap &amp; speak</strong>
+          <span>“Add milk to Groceries” · “Remind me to call mom tomorrow at 6 pm”</span>
+        </div>
+      </div>
+
+      <div class="notes-grid" id="notes-grid"></div>
+
+      <div class="empty" id="home-empty" hidden>
+        <div class="empty-emoji">📝</div>
+        <h2>No notes yet</h2>
+        <p>Tap <b>New note</b> or just say <i>“Create a note called Groceries”</i>.</p>
+      </div>
+
+      <button class="fab btn-green" id="fab-new">
+        <svg class="icon"><use href="#i-plus"/></svg><span>New note</span>
+      </button>
+    </section>
+
+    <!-- ============ SCREEN 2: NOTE DETAIL ============ -->
+    <section class="screen" id="screen-note" aria-label="Note" hidden>
+      <header class="topbar note-topbar">
+        <button class="icon-btn" id="btn-back" aria-label="Back to notes">
+          <svg class="icon"><use href="#i-back"/></svg>
+        </button>
+        <div class="note-head">
+          <input class="note-title-input" id="note-title" aria-label="Note title" maxlength="60" />
+          <p class="eyebrow" id="note-meta">0 of 0 done</p>
+        </div>
+        <button class="icon-btn danger" id="btn-delete-note" aria-label="Delete note">
+          <svg class="icon"><use href="#i-trash"/></svg>
+        </button>
+      </header>
+
+      <div class="progress"><div class="progress-bar" id="note-progress"></div></div>
+
+      <form class="add-row" id="add-item-form" autocomplete="off">
+        <input id="add-item-input" placeholder="Add an item…" maxlength="140" aria-label="New item" />
+        <button type="submit" class="btn-green add-btn" aria-label="Add item">
+          <svg class="icon"><use href="#i-plus"/></svg>
+        </button>
+      </form>
+
+      <ul class="items" id="items-list"></ul>
+
+      <div class="empty small" id="note-empty" hidden>
+        <p>Nothing here yet. Type above or tap the mic and say <i>“Add bread and eggs”</i>.</p>
+      </div>
+
+      <div class="note-actions">
+        <button class="chip-btn btn-red-outline" id="btn-clear-done">Clear completed</button>
+      </div>
+
+      <button class="mic-btn mic-float" id="mic-note" aria-label="Talk to assistant">
+        <span class="pulse"></span>
+        <svg class="icon"><use href="#i-mic"/></svg>
+      </button>
+    </section>
+  </div>
+
+  <!-- ============ VOICE ASSISTANT SHEET ============ -->
+  <div class="sheet-backdrop" id="voice-backdrop" hidden></div>
+  <div class="sheet" id="voice-sheet" role="dialog" aria-modal="true" aria-labelledby="voice-title" hidden>
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="voice-title">Assistant</h2>
+      <button class="icon-btn" id="voice-close" aria-label="Close assistant"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <div class="suggestions" id="suggestions"></div>
+    <form class="voice-input-row" id="voice-form" autocomplete="off">
+      <input id="voice-text" placeholder="Type or tap the mic…" aria-label="Command" />
+      <button type="submit" class="icon-btn send" aria-label="Send"><svg class="icon"><use href="#i-send"/></svg></button>
+      <button type="button" class="mic-btn mic-sheet" id="mic-sheet" aria-label="Start listening">
+        <span class="pulse"></span>
+        <svg class="icon"><use href="#i-mic"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- ============ REMINDER SHEET ============ -->
+  <div class="sheet-backdrop" id="rem-backdrop" hidden></div>
+  <div class="sheet" id="rem-sheet" role="dialog" aria-modal="true" aria-labelledby="rem-title" hidden>
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="rem-title">Set reminder</h2>
+      <button class="icon-btn" id="rem-close" aria-label="Close"><svg class="icon"><use href="#i-close"/></svg></button>
+    </div>
+    <p class="rem-item" id="rem-item-text"></p>
+    <div class="quick-times" id="quick-times">
+      <button type="button" class="chip-btn" data-quick="1h">In 1 hour</button>
+      <button type="button" class="chip-btn" data-quick="tonight">Tonight 8 PM</button>
+      <button type="button" class="chip-btn" data-quick="tomorrow">Tomorrow 9 AM</button>
+    </div>
+    <label class="field"><span>Date &amp; time</span>
+      <input type="datetime-local" id="rem-datetime" />
+    </label>
+    <div class="rem-actions">
+      <button class="btn-red-outline chip-btn" id="rem-remove">Remove</button>
+      <button class="btn-yellow cta" id="rem-save"><svg class="icon"><use href="#i-cal"/></svg> Add to Google Calendar</button>
+    </div>
+  </div>
+
+  <!-- ============ TOAST ============ -->
+  <div class="toast" id="toast" role="status" hidden>
+    <span id="toast-text"></span>
+    <button id="toast-action" hidden>Undo</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
