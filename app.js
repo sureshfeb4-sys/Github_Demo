@@ -43,6 +43,9 @@
        "Say “Mark milk as done”",
        "Say “Remind me to call mom tomorrow at 6 pm”",
        "Tap a circle to tick an item"].forEach((t) => this.addItem(n.id, t, false));
+      const g = this.createNote("Groceries", false);
+      ["Milk", "Eggs", "Bread", "Bananas"].forEach((t) => this.addItem(g.id, t, false));
+      g.items[1].done = true;
       this.save();
     },
     get notes() { return this.state.notes; },
@@ -315,7 +318,7 @@
   /* ---------------- Router ---------------- */
   const route = { name: "home", noteId: null };
   function parseRoute() {
-    const m = location.hash.match(/^#\/note\/([\w-]+)/);
+    const m = location.hash.match(/^#note-([A-Za-z0-9]+)/);
     if (m && Store.getNote(m[1])) { route.name = "note"; route.noteId = m[1]; }
     else { route.name = "home"; route.noteId = null; }
   }
@@ -364,7 +367,7 @@
 
   function renderNote() {
     const n = Store.getNote(route.noteId);
-    if (!n) return go("#/");
+    if (!n) return go("#home");
     state.lastNoteId = n.id;
     const titleEl = $("#note-title");
     if (document.activeElement !== titleEl) titleEl.value = n.title;
@@ -401,7 +404,7 @@
   $("#search-input").addEventListener("input", renderHome);
   $("#fab-new").addEventListener("click", () => {
     const n = Store.createNote("");
-    go(`#/note/${n.id}`);
+    go(`#note-${n.id}`);
     setTimeout(() => { const t = $("#note-title"); t.focus(); t.select(); }, 60);
   });
 
@@ -415,23 +418,23 @@
       longPressed = true;
       if (navigator.vibrate) navigator.vibrate(30);
       const n = Store.getNote(card.dataset.id);
-      if (n && confirm(`Delete “${n.title}”?`)) undoable(`Deleted “${n.title}”`, () => Store.deleteNote(n.id));
+      if (n) undoable(`Deleted “${n.title}”`, () => Store.deleteNote(n.id));
     }, 550);
   });
   ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach((ev) =>
     grid.addEventListener(ev, (e) => { if (ev !== "pointermove" || Math.abs(e.movementY) > 3) clearTimeout(pressTimer); }));
   grid.addEventListener("click", (e) => {
     const card = e.target.closest(".note-card"); if (!card || longPressed) return;
-    go(`#/note/${card.dataset.id}`);
+    go(`#note-${card.dataset.id}`);
   });
   grid.addEventListener("keydown", (e) => {
     const card = e.target.closest(".note-card");
-    if (card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); go(`#/note/${card.dataset.id}`); }
+    if (card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); go(`#note-${card.dataset.id}`); }
   });
   grid.addEventListener("contextmenu", (e) => { if (e.target.closest(".note-card")) e.preventDefault(); });
 
   /* ---------------- UI events: note ---------------- */
-  $("#btn-back").addEventListener("click", () => go("#/"));
+  $("#btn-back").addEventListener("click", () => go("#home"));
   $("#note-title").addEventListener("input", (e) => {
     const n = Store.getNote(route.noteId); if (!n) return;
     n.title = e.target.value; Store.touch(n); Store.save();
@@ -441,8 +444,7 @@
 
   $("#btn-delete-note").addEventListener("click", () => {
     const n = Store.getNote(route.noteId); if (!n) return;
-    if (!confirm(`Delete “${n.title}” and all its items?`)) return;
-    go("#/");
+    go("#home");
     undoable(`Deleted “${n.title}”`, () => Store.deleteNote(n.id));
   });
 
@@ -510,15 +512,17 @@
     if (q === "tomorrow") { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
     $("#rem-datetime").value = toLocalInput(d);
   });
-  $("#rem-save").addEventListener("click", () => {
-    if (!remTarget) return;
-    const val = $("#rem-datetime").value; if (!val) return toast("Pick a date and time");
+  // The save button is a real link: we fill in its href during the click so the
+  // browser opens Google Calendar natively (window.open is often blocked).
+  $("#rem-save").addEventListener("click", (e) => {
+    if (!remTarget) return e.preventDefault();
+    const val = $("#rem-datetime").value; if (!val) { e.preventDefault(); return toast("Pick a date and time"); }
     const when = new Date(val);
     const n = Store.getNote(remTarget.noteId);
     const it = Store.updateItem(remTarget.noteId, remTarget.itemId, { reminder: when.toISOString() });
     closeSheet("rem"); renderNote(); scheduleReminders();
     askNotificationPermission();
-    window.open(googleCalendarUrl(it.text, when, `From your “${n.title}” note in VoiceNotes`), "_blank", "noopener");
+    e.currentTarget.href = googleCalendarUrl(it.text, when, `From your “${n.title}” note in VoiceNotes`);
     toast(`Reminder set for ${fmtWhen(when)}`);
   });
   $("#rem-remove").addEventListener("click", () => {
@@ -729,7 +733,7 @@
   function showNote(note, itemId) {
     state.lastNoteId = note.id;
     if (route.name === "note" && route.noteId === note.id) renderNote();
-    else if (route.name === "note") go(`#/note/${note.id}`);
+    else if (route.name === "note") go(`#note-${note.id}`);
     else renderHome();
     if (itemId) flashItem(itemId);
   }
@@ -767,7 +771,7 @@
 
     // GO HOME
     if (/^(go (back|home)|home|show (all|my) notes|all notes|back)$/.test(text)) {
-      go("#/"); return botSay("Here are all your notes.");
+      go("#home"); return botSay("Here are all your notes.");
     }
 
     // REMINDER
@@ -782,7 +786,7 @@
       const note = existing || Store.createNote(title);
       items.forEach((t) => Store.addItem(note.id, t));
       state.lastNoteId = note.id;
-      go(`#/note/${note.id}`);
+      go(`#note-${note.id}`);
       return botSay(existing
         ? `You already have “${note.title}”, so I opened it${items.length ? ` and added ${listWords(items)}` : ""}.`
         : `Created “${note.title}”${items.length ? ` with ${listWords(items)}` : ""}.`);
@@ -817,7 +821,7 @@
       const note = findNote(m[1]);
       if (!note) return botSay(`I couldn't find a note called “${m[1]}”.`, { choices: [{ label: `Create “${cap(m[1])}”`, value: "__c" }] }),
         (state.pending = { resume: (v) => (v === "__c" || /^(yes|yeah|yep|sure|ok|okay|create)/.test(v)) ? handleCommand(`create a note called ${m[1]}`) : botSay("Okay.") });
-      state.lastNoteId = note.id; go(`#/note/${note.id}`);
+      state.lastNoteId = note.id; go(`#note-${note.id}`);
       return botSay(`Opened “${note.title}”.`);
     }
 
@@ -903,7 +907,7 @@
     const wasOpen = route.name === "note" && route.noteId === note.id;
     Store.deleteNote(note.id);
     if (state.lastNoteId === note.id) state.lastNoteId = null;
-    if (wasOpen) go("#/"); else render();
+    if (wasOpen) go("#home"); else render();
     scheduleReminders();
     toast(`Deleted “${note.title}”`, "Undo", () => { Store.restore(snap); render(); scheduleReminders(); });
     botSay(`Deleted the “${note.title}” note. Tap Undo if that was a mistake.`, { speech: `Deleted ${note.title}.` });
