@@ -68,6 +68,11 @@ button { cursor: pointer; border: 0; background: none; }
   white-space: nowrap;
 }
 
+.made-by {
+  margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.made-by span { color: var(--yellow); }
+
 /* ---------- Search ---------- */
 .search {
   display: flex; align-items: center; gap: 10px;
