@@ -562,7 +562,7 @@
   }
   function closeAssistant() { stopRecognition(); closeSheet("voice"); if ("speechSynthesis" in window) speechSynthesis.cancel(); }
 
-  $("#mic-home").addEventListener("click", () => openAssistant(true));
+  $("#voice-hero").addEventListener("click", () => openAssistant(true));
   $("#mic-note").addEventListener("click", () => openAssistant(true));
   $("#mic-sheet").addEventListener("click", () => (listening ? stopRecognition() : startRecognition()));
   $("#voice-close").addEventListener("click", closeAssistant);

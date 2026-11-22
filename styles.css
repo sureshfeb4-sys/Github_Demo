@@ -96,6 +96,13 @@ button { cursor: pointer; border: 0; background: none; }
     var(--surface);
   border: 1px solid var(--border);
 }
+button.voice-hero {
+  width: 100%; text-align: left; color: inherit; font: inherit; cursor: pointer;
+  transition: transform 0.15s var(--ease), border-color 0.2s;
+}
+button.voice-hero:active { transform: scale(0.98); }
+button.voice-hero:active .mic-btn { transform: scale(0.94); }
+button.voice-hero:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 .voice-hero-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .voice-hero-text strong { font-size: 17px; }
 .voice-hero-text span { color: var(--muted); font-size: 13px; line-height: 1.4; }

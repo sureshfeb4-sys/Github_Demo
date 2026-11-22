@@ -46,16 +46,16 @@
         <input id="search-input" type="search" placeholder="Search notes or items" autocomplete="off" />
       </label>
 
-      <div class="voice-hero" id="voice-hero">
-        <button class="mic-btn mic-hero" id="mic-home" aria-label="Talk to assistant">
+      <button type="button" class="voice-hero" id="voice-hero" aria-label="Tap and speak to the assistant">
+        <span class="mic-btn mic-hero" aria-hidden="true">
           <span class="pulse"></span>
           <svg class="icon"><use href="#i-mic"/></svg>
-        </button>
-        <div class="voice-hero-text">
+        </span>
+        <span class="voice-hero-text">
           <strong>Tap &amp; speak</strong>
           <span>“Add milk to Groceries” · “Remind me to call mom tomorrow at 6 pm”</span>
-        </div>
-      </div>
+        </span>
+      </button>
 
       <div class="notes-grid" id="notes-grid"></div>
 
